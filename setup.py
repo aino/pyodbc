@@ -143,18 +143,6 @@ def get_compiler_settings(version_str):
         # OS name not windows, but still on Windows
         settings['libraries'].append('odbc32')
 
-    elif sys.platform == 'darwin':
-        # OS/X now ships with iODBC.
-        settings['libraries'].append('iodbc')
-
-        # Apple has decided they won't maintain the iODBC system in OS/X and has added deprecation warnings in 10.8.
-        # For now target 10.7 to eliminate the warnings.
-
-        # Python functions take a lot of 'char *' that really should be const.  gcc complains about this *a lot*
-        settings['extra_compile_args'] = ['-Wno-write-strings', '-Wno-deprecated-declarations']
-
-        settings['define_macros'].append( ('MAC_OS_X_VERSION_10_7',) )
-
     else:
         # Other posix-like: Linux, Solaris, etc.
 
@@ -204,37 +192,8 @@ def get_version():
          read the version from the PKG-INFO file.
       3. Use 3.0.0.0 and complain a lot.
     """
-    # My goal is to (1) provide accurate tags for official releases but (2) not have to manage tags for every test
-    # release.
-    #
-    # Official versions are tagged using 3 numbers: major, minor, micro.  A build of a tagged version should produce
-    # the version using just these pieces, such as 2.1.4.
-    #
-    # Unofficial versions are "working towards" the next version.  So the next unofficial build after 2.1.4 would be a
-    # beta for 2.1.5.  Using 'git describe' we can find out how many changes have been made after 2.1.4 and we'll use
-    # this count as the beta id (beta1, beta2, etc.)
-    #
-    # Since the 4 numbers are put into the Windows DLL, we want to make sure the beta versions sort *before* the
-    # official, so we set the official build number to 9999, but we don't show it.
+    return '3.0.7', [3, 0, 7]
 
-    name    = None              # branch/feature name.  Should be None for official builds.
-    numbers = None              # The 4 integers that make up the version.
-
-    # If this is a source release the version will have already been assigned and be in the PKG-INFO file.
-
-    name, numbers = _get_version_pkginfo()
-
-    # If not a source release, we should be in a git repository.  Look for the latest tag.
-
-    if not numbers:
-        name, numbers = _get_version_git()
-
-    if not numbers:
-        _print('WARNING: Unable to determine version.  Using 3.0.0.0')
-        name, numbers = '3.0.0-unsupported', [3,0,0,0]
-
-    return name, numbers
-            
 
 def _get_version_pkginfo():
     filename = join(dirname(abspath(__file__)), 'PKG-INFO')
